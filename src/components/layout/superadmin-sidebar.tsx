@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, LayoutDashboard, Users, Shield } from "lucide-react"; // Shield for SuperAdmin branding
+import { ChevronLeft, LayoutDashboard, Users, Shield, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface SuperAdminSidebarProps {
@@ -28,7 +28,12 @@ export function SuperAdminSidebar({ isOpen, onToggle }: SuperAdminSidebarProps) 
         {
             label: "System Users",
             href: "/superadmin/users",
-            icon: Shield, // Reuse Shield or import UserCog
+            icon: Shield,
+        },
+        {
+            label: "Settings",
+            href: "/superadmin/settings/profile",
+            icon: Settings,
         },
     ];
 

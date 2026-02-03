@@ -7,32 +7,51 @@ import { apiClient } from "@/lib/api";
 import { useState } from "react";
 import { toast } from "sonner";
 
-// ✅ FIXED FETCHER
-const suppliersFetcher = async (url: string): Promise<Supplier[]> => {
+// ✅ Pagination interface
+interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+interface SuppliersResponse {
+  data: Supplier[];
+  pagination: Pagination;
+}
+
+// ✅ FIXED FETCHER with pagination support
+const suppliersFetcher = async (url: string): Promise<SuppliersResponse> => {
   try {
     const response = await apiClient.get<any>(url);
 
     console.log("🔍 Suppliers Fetcher:", { url, response });
 
-    if (Array.isArray(response)) {
-      console.log("✅ Direct array:", response.length, "suppliers");
-      return response;
+    // Case 1: Paginated response
+    if (response && typeof response === "object" && !Array.isArray(response)) {
+      if (response.data && Array.isArray(response.data)) {
+        console.log("✅ Paginated response:", response.data.length, "suppliers");
+        return {
+          data: response.data,
+          pagination: response.pagination || { page: 1, limit: 10, total: response.data.length, totalPages: 1 },
+        };
+      }
     }
 
-    if (response?.data && Array.isArray(response.data)) {
-      console.log(
-        "✅ Array in response.data:",
-        response.data.length,
-        "suppliers"
-      );
-      return response.data;
+    // Case 2: Direct array
+    if (Array.isArray(response)) {
+      console.log("✅ Direct array:", response.length, "suppliers");
+      return {
+        data: response,
+        pagination: { page: 1, limit: 10, total: response.length, totalPages: 1 },
+      };
     }
 
     console.warn("⚠️ Unexpected response structure:", response);
-    return [];
+    return { data: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 0 } };
   } catch (error) {
     console.error("❌ Suppliers fetcher error:", error);
-    return [];
+    return { data: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 0 } };
   }
 };
 
@@ -61,18 +80,19 @@ export function useSuppliers(params?: {
     }, {} as Record<string, string>)
   ).toString();
 
-  const { data, error, isLoading, mutate } = useSWR<Supplier[]>(
+  const { data, error, isLoading, mutate } = useSWR<SuppliersResponse>(
     `/suppliers?${queryString}`,
     suppliersFetcher,
     {
       revalidateOnFocus: false,
       onSuccess: (data) =>
-        console.log("✅ useSuppliers loaded:", data?.length, "suppliers"),
+        console.log("✅ useSuppliers loaded:", data?.data?.length, "suppliers"),
     }
   );
 
   return {
-    suppliers: data || [],
+    suppliers: data?.data || [],
+    pagination: data?.pagination,
     isLoading,
     isError: error,
     mutate,

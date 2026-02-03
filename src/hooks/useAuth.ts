@@ -37,7 +37,11 @@ export function useAuth(): UseAuthReturn {
       // Get user data from localStorage
       const userData = localStorage.getItem("user_data");
       if (userData) {
-        setUser(JSON.parse(userData));
+        const parsed = JSON.parse(userData);
+        // 🔍 DEBUG: Log what we're reading
+        console.log("🔍 Stored user_data:", parsed);
+        console.log("🔍 Stored user_data.clientId:", parsed?.clientId);
+        setUser(parsed);
       }
 
       setIsLoading(false);
@@ -59,6 +63,10 @@ export function useAuth(): UseAuthReturn {
 
       // Save token
       setAuthToken(response.token);
+
+      // 🔍 DEBUG: Log what we're saving
+      console.log("🔍 Login Response user:", response.user);
+      console.log("🔍 Login Response user.clientId:", response.user?.clientId);
 
       // Save user data
       localStorage.setItem("user_data", JSON.stringify(response.user));

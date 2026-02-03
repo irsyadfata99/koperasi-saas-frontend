@@ -54,12 +54,40 @@ export function usePurchaseActions() {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth(); // ✅ Get user context
 
+  // ✅ Helper to get clientId reliably (fallback to localStorage)
+  const getClientId = (): string | null => {
+    console.log("🔍 getClientId - user from hook:", user);
+    console.log("🔍 getClientId - user.clientId from hook:", user?.clientId);
+    if (user?.clientId) return user.clientId;
+    try {
+      const storedUser = localStorage.getItem("user_data");
+      console.log("🔍 getClientId - storedUser from localStorage:", storedUser);
+      if (storedUser) {
+        const parsed = JSON.parse(storedUser);
+        console.log("🔍 getClientId - parsed.clientId:", parsed?.clientId);
+        return parsed.clientId || null;
+      }
+    } catch (e) {
+      console.error("Failed to parse user_data from localStorage", e);
+    }
+    return null;
+  };
+
   const createPurchase = async (data: CreatePurchaseRequest) => {
     setIsLoading(true);
     try {
+      const clientId = getClientId();
+      if (!clientId) {
+        throw new Error("Client ID tidak ditemukan. Silakan login ulang.");
+      }
+
       const payload = {
         ...data,
-        clientId: user?.clientId, // ✅ Inject client_id
+        clientId, // ✅ Inject client_id
+        items: data.items.map((item) => ({
+          ...item,
+          clientId,
+        })),
       };
       const purchase = await apiClient.post<Purchase>("/purchases", payload);
       toast.success("Pembelian berhasil dibuat", {

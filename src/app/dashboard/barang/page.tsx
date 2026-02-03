@@ -15,7 +15,7 @@ export default function ProductListPage() {
   const user = useCurrentUser();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const { products, isLoading, mutate } = useProducts({
+  const { products, pagination, isLoading, mutate } = useProducts({
     page,
     limit: 10,
     search,
@@ -72,11 +72,40 @@ export default function ProductListPage() {
           <LoadingSpinner size="lg" />
         </div>
       ) : (
-        <ProductTable
-          products={products || []}
-          onDelete={handleDelete}
-          userRole={user?.role || "KASIR"}
-        />
+        <>
+          <ProductTable
+            products={products || []}
+            onDelete={handleDelete}
+            userRole={user?.role || "KASIR"}
+          />
+
+          {/* ✅ Pagination UI */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between py-4">
+              <p className="text-sm text-muted-foreground">
+                Menampilkan {products.length} dari {pagination.total} produk
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(page - 1)}
+                  disabled={page === 1}
+                >
+                  Sebelumnya
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(page + 1)}
+                  disabled={page === pagination.totalPages}
+                >
+                  Selanjutnya
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

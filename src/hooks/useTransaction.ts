@@ -7,32 +7,51 @@ import { apiClient } from "@/lib/api";
 import { useState } from "react";
 import { toast } from "sonner";
 
-// ✅ FIXED FETCHER
-const transactionsFetcher = async (url: string): Promise<Transaction[]> => {
+// ✅ Pagination interface
+interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+interface TransactionsResponse {
+  data: Transaction[];
+  pagination: Pagination;
+}
+
+// ✅ FIXED FETCHER with pagination support
+const transactionsFetcher = async (url: string): Promise<TransactionsResponse> => {
   try {
     const response = await apiClient.get<any>(url);
 
     console.log("🔍 Transactions Fetcher:", { url, response });
 
-    if (Array.isArray(response)) {
-      console.log("✅ Direct array:", response.length, "transactions");
-      return response;
+    // Case 1: Paginated response
+    if (response && typeof response === "object" && !Array.isArray(response)) {
+      if (response.data && Array.isArray(response.data)) {
+        console.log("✅ Paginated response:", response.data.length, "transactions");
+        return {
+          data: response.data,
+          pagination: response.pagination || { page: 1, limit: 10, total: response.data.length, totalPages: 1 },
+        };
+      }
     }
 
-    if (response?.data && Array.isArray(response.data)) {
-      console.log(
-        "✅ Array in response.data:",
-        response.data.length,
-        "transactions"
-      );
-      return response.data;
+    // Case 2: Direct array
+    if (Array.isArray(response)) {
+      console.log("✅ Direct array:", response.length, "transactions");
+      return {
+        data: response,
+        pagination: { page: 1, limit: 10, total: response.length, totalPages: 1 },
+      };
     }
 
     console.warn("⚠️ Unexpected response structure:", response);
-    return [];
+    return { data: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 0 } };
   } catch (error) {
     console.error("❌ Transactions fetcher error:", error);
-    return [];
+    return { data: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 0 } };
   }
 };
 
@@ -56,18 +75,19 @@ export function useTransactions(params?: any) {
     }, {} as Record<string, string>)
   ).toString();
 
-  const { data, error, isLoading, mutate } = useSWR<Transaction[]>(
+  const { data, error, isLoading, mutate } = useSWR<TransactionsResponse>(
     `/sales?${queryString}`,
     transactionsFetcher,
     {
       revalidateOnFocus: false,
       onSuccess: (data) =>
-        console.log("✅ useTransactions loaded:", data?.length, "transactions"),
+        console.log("✅ useTransactions loaded:", data?.data?.length, "transactions"),
     }
   );
 
   return {
-    transactions: data || [],
+    transactions: data?.data || [],
+    pagination: data?.pagination,
     isLoading,
     isError: error,
     mutate,
@@ -95,13 +115,38 @@ export function useTransactionActions() {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth(); // ✅ Get user context
 
+  // ✅ Helper to get clientId reliably (fallback to localStorage)
+  const getClientId = (): string | null => {
+    if (user?.clientId) return user.clientId;
+    try {
+      const storedUser = localStorage.getItem("user_data");
+      if (storedUser) {
+        const parsed = JSON.parse(storedUser);
+        return parsed.clientId || null;
+      }
+    } catch (e) {
+      console.error("Failed to parse user_data from localStorage", e);
+    }
+    return null;
+  };
+
   const createSale = async (data: any) => {
     setIsLoading(true);
     try {
       // ✅ Inject clientId if not already present
+      const clientId = data.clientId || getClientId();
+
+      if (!clientId) {
+        throw new Error("Client ID tidak ditemukan. Silakan login ulang.");
+      }
+
       const payload = {
         ...data,
-        clientId: data.clientId || user?.clientId,
+        clientId,
+        items: data.items?.map((item: any) => ({
+          ...item,
+          clientId,
+        })),
       };
       const sale = await apiClient.post<Transaction>("/sales", payload);
       toast.success("Transaksi berhasil dibuat");

@@ -233,6 +233,10 @@ export function useReturnActions() {
       const payload = {
         ...data,
         clientId: user?.clientId, // ✅ Inject client_id
+        items: data.items.map((item) => ({
+          ...item,
+          clientId: user?.clientId,
+        })),
       };
       const result = await apiClient.post<PurchaseReturn>(
         "/returns/purchases",
@@ -263,6 +267,10 @@ export function useReturnActions() {
       const payload = {
         ...data,
         clientId: user?.clientId, // ✅ Inject client_id
+        items: data.items.map((item) => ({
+          ...item,
+          clientId: user?.clientId,
+        })),
       };
       const result = await apiClient.post<SalesReturn>("/returns/sales", payload);
       toast.success("Retur penjualan berhasil dibuat", {

@@ -18,8 +18,8 @@ export function Navbar() {
             <Link href="/">
               <Button variant="ghost">Homepage</Button>
             </Link>
-            <Link href="/register">
-              <Button variant="ghost">Daftar Anggota</Button>
+            <Link href="/">
+              <Button variant="ghost">Homepage</Button>
             </Link>
             <Link href="/login">
               <Button>Login</Button>

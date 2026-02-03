@@ -217,7 +217,10 @@ export function usePointActions() {
   const expire = async () => {
     setIsLoading(true);
     try {
-      const result = await expirePoints();
+      const payload = {
+        clientId: user?.clientId || undefined,
+      };
+      const result = await expirePoints(payload);
       toast.success("Proses expire point selesai", {
         description: `${result.totalExpired} transaksi point kadaluarsa`,
       });

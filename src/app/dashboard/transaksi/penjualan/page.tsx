@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTransactions } from "@/hooks/useTransaction";
 import { TransactionTable } from "@/components/transactions/transaction-table";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import {
@@ -18,9 +19,9 @@ export default function TransactionHistoryPage() {
   const [search, setSearch] = useState("");
   const [saleType, setSaleType] = useState<string | undefined>(undefined);
   const [status, setStatus] = useState<string | undefined>(undefined);
-  const [page] = useState(1);
+  const [page, setPage] = useState(1);
 
-  const { transactions, isLoading } = useTransactions({
+  const { transactions, pagination, isLoading } = useTransactions({
     page,
     limit: 10,
     search,
@@ -88,7 +89,36 @@ export default function TransactionHistoryPage() {
           <LoadingSpinner size="lg" />
         </div>
       ) : (
-        <TransactionTable transactions={transactions || []} />
+        <>
+          <TransactionTable transactions={transactions || []} />
+
+          {/* ✅ Pagination UI */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between py-4">
+              <p className="text-sm text-muted-foreground">
+                Menampilkan {transactions.length} dari {pagination.total} transaksi
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(page - 1)}
+                  disabled={page === 1}
+                >
+                  Sebelumnya
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(page + 1)}
+                  disabled={page === pagination.totalPages}
+                >
+                  Selanjutnya
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

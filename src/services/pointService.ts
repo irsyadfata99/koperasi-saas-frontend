@@ -85,8 +85,7 @@ export const exportPointTransactions = async (
   if (filters?.sortOrder) params.append("sortOrder", filters.sortOrder);
 
   const response = await fetch(
-    `${
-      process.env.NEXT_PUBLIC_API_BASE_URL
+    `${process.env.NEXT_PUBLIC_API_BASE_URL
     }/points/transactions/export?${params.toString()}`,
     {
       method: "GET",
@@ -161,8 +160,8 @@ export const adjustPoints = async (
 /**
  * Expire old points (ADMIN only)
  */
-export const expirePoints = async (): Promise<ExpirePointsResponse> => {
-  return await apiClient.post<ExpirePointsResponse>("/points/expire");
+export const expirePoints = async (data?: { clientId?: string }): Promise<ExpirePointsResponse> => {
+  return await apiClient.post<ExpirePointsResponse>("/points/expire", data);
 };
 
 // ============================================

@@ -142,7 +142,7 @@ export function EditClientDialog({
                                         <FormLabel>Status</FormLabel>
                                         <Select
                                             onValueChange={field.onChange}
-                                            defaultValue={field.value}
+                                            value={field.value}
                                         >
                                             <FormControl>
                                                 <SelectTrigger>
@@ -167,7 +167,7 @@ export function EditClientDialog({
                                         <FormLabel>Subscription Plan</FormLabel>
                                         <Select
                                             onValueChange={field.onChange}
-                                            defaultValue={field.value}
+                                            value={field.value}
                                         >
                                             <FormControl>
                                                 <SelectTrigger>

@@ -2,7 +2,9 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
+
   useMembers,
   useMemberActions,
   useMemberStats,
@@ -10,8 +12,9 @@ import {
 import { MemberTable } from "@/components/members/member-table";
 import { MemberDetailFull } from "@/components/members/member-detail-full";
 import { MemberEditForm } from "@/components/members/member-edit-form";
+import { MemberCreateForm } from "@/components/members/member-create-form";
 import { Input } from "@/components/ui/input";
-import { Search, Users, TrendingUp } from "lucide-react";
+import { Search, Users, TrendingUp, Plus } from "lucide-react";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { useCurrentUser } from "@/hooks/useAuth";
 import {
@@ -43,18 +46,23 @@ export default function MembersManagementPage() {
   const user = useCurrentUser();
   const [search, setSearch] = useState("");
   const [regionFilter, setRegionFilter] = useState("");
+  const [page, setPage] = useState(1); // ✅ Add page state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [viewingMember, setViewingMember] = useState<Member | null>(null);
 
-  const { members, isLoading, mutate } = useMembers({
+  const { members, pagination, isLoading, mutate } = useMembers({
     search,
     regionCode: regionFilter || undefined,
+    page,
+    limit: 10,
   });
   const { stats, isLoading: statsLoading } = useMemberStats();
   const {
     updateMember,
+    createMember,
     toggleActive,
     isLoading: isSubmitting,
   } = useMemberActions();
@@ -82,6 +90,16 @@ export default function MembersManagementPage() {
     }
   };
 
+  const handleCreate = async (data: any) => {
+    try {
+      await createMember(data);
+      setIsCreateDialogOpen(false);
+      mutate();
+    } catch {
+      // Error handled by hook
+    }
+  };
+
   const handleToggle = async (id: string) => {
     try {
       await toggleActive(id);
@@ -95,10 +113,18 @@ export default function MembersManagementPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Manajemen Member</h1>
-        <p className="text-muted-foreground">
-          Kelola data member dan anggota koperasi
-        </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Manajemen Member</h1>
+            <p className="text-muted-foreground">
+              Kelola data member dan anggota koperasi
+            </p>
+          </div>
+          <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Tambah Member
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -189,13 +215,42 @@ export default function MembersManagementPage() {
           <LoadingSpinner size="lg" />
         </div>
       ) : (
-        <MemberTable
-          members={members as Member[]}
-          onView={handleView}
-          onEdit={handleEdit}
-          onToggle={handleToggle}
-          userRole={user?.role || "KASIR"}
-        />
+        <>
+          <MemberTable
+            members={members as Member[]}
+            onView={handleView}
+            onEdit={handleEdit}
+            onToggle={handleToggle}
+            userRole={user?.role || "KASIR"}
+          />
+
+          {/* ✅ Pagination UI */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between py-4">
+              <p className="text-sm text-muted-foreground">
+                Menampilkan {members.length} dari {pagination.total} data
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(page - 1)}
+                  disabled={page === 1}
+                >
+                  Sebelumnya
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(page + 1)}
+                  disabled={page === pagination.totalPages}
+                >
+                  Selanjutnya
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Dialog Form Edit */}
@@ -218,6 +273,23 @@ export default function MembersManagementPage() {
               isLoading={isSubmitting}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Form Create */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Tambah Member Baru</DialogTitle>
+            <DialogDescription>
+              Isi data member baru. NIK akan digunakan sebagai identitas utama.
+            </DialogDescription>
+          </DialogHeader>
+          <MemberCreateForm
+            onSubmit={handleCreate}
+            onCancel={() => setIsCreateDialogOpen(false)}
+            isLoading={isSubmitting}
+          />
         </DialogContent>
       </Dialog>
 

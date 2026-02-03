@@ -3,15 +3,22 @@
 "use client";
 
 import { useCurrentUser } from "@/hooks/useAuth";
+import { usePathname } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { UserCircle, LogOut, User } from "lucide-react";
+import { UserCircle, LogOut, User, Home } from "lucide-react";
 import Link from "next/link";
 
 export function UserMenu() {
   const user = useCurrentUser();
+  const pathname = usePathname();
 
   if (!user) return null;
+
+  // Detect if we're in superadmin section
+  const isSuperadminSection = pathname?.startsWith("/superadmin");
+  const homeLink = isSuperadminSection ? "/superadmin" : "/dashboard";
+  const profileLink = isSuperadminSection ? "/superadmin" : "/dashboard/settings/profile";
 
   return (
     <DropdownMenu>
@@ -30,11 +37,19 @@ export function UserMenu() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/dashboard/profile" className="cursor-pointer">
-            <User className="mr-2 h-4 w-4" />
-            Profile
+          <Link href={homeLink} className="cursor-pointer">
+            <Home className="mr-2 h-4 w-4" />
+            Home
           </Link>
         </DropdownMenuItem>
+        {!isSuperadminSection && (
+          <DropdownMenuItem asChild>
+            <Link href={profileLink} className="cursor-pointer">
+              <User className="mr-2 h-4 w-4" />
+              Profile
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href="/logout" className="cursor-pointer text-destructive">

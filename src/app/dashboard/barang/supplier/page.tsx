@@ -19,12 +19,13 @@ import { SupplierForm as SupplierFormType } from "@/lib/validations";
 export default function SuppliersPage() {
   const user = useCurrentUser();
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1); // ✅ Add page state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [viewingSupplier, setViewingSupplier] = useState<Supplier | null>(null);
 
-  const { suppliers, isLoading, mutate } = useSuppliers({ search });
+  const { suppliers, pagination, isLoading, mutate } = useSuppliers({ search, page, limit: 10 });
   const { createSupplier, updateSupplier, deleteSupplier, toggleActive, isLoading: isSubmitting } = useSupplierActions();
 
   const handleCreate = () => {
@@ -105,7 +106,36 @@ export default function SuppliersPage() {
           <LoadingSpinner size="lg" />
         </div>
       ) : (
-        <SupplierTable suppliers={suppliers || []} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} onToggle={handleToggle} userRole={user?.role || "KASIR"} />
+        <>
+          <SupplierTable suppliers={suppliers || []} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} onToggle={handleToggle} userRole={user?.role || "KASIR"} />
+
+          {/* ✅ Pagination UI */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between py-4">
+              <p className="text-sm text-muted-foreground">
+                Menampilkan {suppliers.length} dari {pagination.total} supplier
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(page - 1)}
+                  disabled={page === 1}
+                >
+                  Sebelumnya
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(page + 1)}
+                  disabled={page === pagination.totalPages}
+                >
+                  Selanjutnya
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Dialog Form */}

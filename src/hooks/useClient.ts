@@ -21,7 +21,7 @@ export interface Client {
 }
 
 export interface CreateClientPayload {
-    code: string;
+    code?: string; // Optional - backend will auto-generate if not provided
     businessName: string;
     ownerName?: string;
     phone?: string;

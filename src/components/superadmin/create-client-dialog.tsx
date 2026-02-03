@@ -37,7 +37,7 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 
 const createClientSchema = z.object({
-    code: z.string().min(1, "Code is required"),
+    code: z.string().optional(), // Optional - backend will auto-generate
     businessName: z.string().min(1, "Business name is required"),
     ownerName: z.string().optional(),
     phone: z.string().optional(),
@@ -126,7 +126,7 @@ export function CreateClientDialog({
     const onSubmit = async (data: CreateClientValues) => {
         try {
             await createClient({
-                code: data.code,
+                code: data.code || undefined, // Let backend auto-generate if empty
                 businessName: data.businessName,
                 ownerName: data.ownerName,
                 phone: data.phone,
@@ -184,10 +184,13 @@ export function CreateClientDialog({
                                     name="code"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Store Code *</FormLabel>
+                                            <FormLabel>Store Code</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="e.g. STORE001" {...field} />
+                                                <Input placeholder="Auto-generate (kosongkan)" {...field} />
                                             </FormControl>
+                                            <FormDescription className="text-xs">
+                                                Kosongkan untuk auto: CLI-2026-XXXX
+                                            </FormDescription>
                                             <FormMessage />
                                         </FormItem>
                                     )}

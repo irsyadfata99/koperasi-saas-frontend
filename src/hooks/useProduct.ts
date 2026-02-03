@@ -9,6 +9,48 @@ import { arrayFetcher, itemFetcher, ensureArray } from "@/lib/swr-fetcher";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { ProductForm as ProductFormData } from "@/lib/validations";
+// ✅ Pagination interface
+interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+interface ProductsResponse {
+  data: Product[];
+  pagination: Pagination;
+}
+
+// ✅ Custom fetcher for products with pagination
+const productsFetcher = async (url: string): Promise<ProductsResponse> => {
+  try {
+    const response = await api.get<any>(url);
+
+    // Case 1: Paginated response
+    if (response && typeof response === "object" && !Array.isArray(response)) {
+      if (response.data && Array.isArray(response.data)) {
+        return {
+          data: response.data,
+          pagination: response.pagination || { page: 1, limit: 10, total: response.data.length, totalPages: 1 },
+        };
+      }
+    }
+
+    // Case 2: Direct array
+    if (Array.isArray(response)) {
+      return {
+        data: response,
+        pagination: { page: 1, limit: 10, total: response.length, totalPages: 1 },
+      };
+    }
+
+    return { data: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 0 } };
+  } catch (error) {
+    console.error("❌ Products fetcher error:", error);
+    return { data: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 0 } };
+  }
+};
 
 export function useProducts(params?: Record<string, unknown>) {
   const queryString = new URLSearchParams(
@@ -20,10 +62,15 @@ export function useProducts(params?: Record<string, unknown>) {
     }, {} as Record<string, string>)
   ).toString();
 
-  const { data, error, isLoading, mutate } = useSWR(`/products?${queryString}`, arrayFetcher, { revalidateOnFocus: false });
+  const { data, error, isLoading, mutate } = useSWR<ProductsResponse>(
+    `/products?${queryString}`,
+    productsFetcher,
+    { revalidateOnFocus: false }
+  );
 
   return {
-    products: ensureArray(data),
+    products: data?.data || [],
+    pagination: data?.pagination,
     isLoading,
     isError: error,
     mutate,
