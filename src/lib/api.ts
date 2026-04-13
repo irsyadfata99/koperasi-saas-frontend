@@ -233,32 +233,57 @@ export const clearAuth = (): void => {
   }
 };
 
-// ============================================
-// API ERROR HANDLER
-// ============================================
+/**
+ * Extracts the most meaningful error message from a backend API error.
+ * Handles both:
+ *  - Field-level validation errors: { errors: { password: ["terlalu pendek"] } }
+ *  - General message errors: { message: "Username sudah digunakan" }
+ */
 export const handleApiError = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
-    const axiosError = error as AxiosError<ApiError>;
+    const data = error.response?.data as ApiError | undefined;
 
-    if (axiosError.response?.data?.message) {
-      return axiosError.response.data.message;
+    // Priority 1: Field-level validation errors (e.g. from SequelizeValidationError)
+    if (data?.errors && Object.keys(data.errors).length > 0) {
+      const messages = Object.entries(data.errors)
+        .flatMap(([field, msgs]) =>
+          msgs.map((msg) => {
+            // Capitalize field name for readability: "password" -> "Password"
+            const label = field === "general" ? "" : `${field.charAt(0).toUpperCase() + field.slice(1)}: `;
+            return `${label}${msg}`;
+          })
+        );
+      return messages.join("\n");
     }
 
-    if (axiosError.response?.data?.errors) {
-      const errors = axiosError.response.data.errors;
-      const errorMessages = Object.values(errors).flat();
-      if (errorMessages.length > 0) {
-        return errorMessages.join(", ");
-      }
+    // Priority 2: Top-level message from backend
+    if (data?.message) {
+      return data.message;
     }
 
-    if (axiosError.message) {
-      return axiosError.message;
+    // Priority 3: Network/generic Axios message
+    if (error.message) {
+      return error.message;
     }
   }
 
-  return "An unexpected error occurred";
+  // Fallback for non-Axios errors
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Terjadi kesalahan yang tidak diketahui";
 };
+
+/**
+ * Shorthand alias for use in hooks — same as handleApiError.
+ * Returns the backend error message or a provided fallback.
+ */
+export const extractApiError = (error: unknown, fallback = "Operasi gagal"): string => {
+  const msg = handleApiError(error);
+  return msg || fallback;
+};
+
 
 // ============================================
 // ENHANCED API METHODS WITH RETRY & DEDUPLICATION

@@ -22,6 +22,7 @@ import {
   Gift,
   Sliders,
   DollarSign,
+  Store,
 } from "lucide-react";
 
 export interface NavItem {
@@ -230,6 +231,18 @@ export const NAVIGATION: NavCategory[] = [
         icon: Gift,
         roles: ["ADMIN"],
       },
+      {
+        label: "Akses Pengguna",
+        href: "/dashboard/settings/users",
+        icon: Users,
+        roles: ["ADMIN"],
+      },
+      // {
+      //   label: "Pengaturan Toko",
+      //   href: "/dashboard/settings/general",
+      //   icon: Store,
+      //   roles: ["ADMIN"],
+      // },
     ],
   },
 ];

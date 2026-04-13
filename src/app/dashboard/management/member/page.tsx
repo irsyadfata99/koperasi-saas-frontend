@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/select";
 import { REGIONS } from "@/constants/regions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataPagination } from "@/components/shared/data-pagination";
 
 export default function MembersManagementPage() {
   const user = useCurrentUser();
@@ -224,31 +225,15 @@ export default function MembersManagementPage() {
             userRole={user?.role || "KASIR"}
           />
 
-          {/* ✅ Pagination UI */}
-          {pagination && pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between py-4">
-              <p className="text-sm text-muted-foreground">
-                Menampilkan {members.length} dari {pagination.total} data
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(page - 1)}
-                  disabled={page === 1}
-                >
-                  Sebelumnya
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(page + 1)}
-                  disabled={page === pagination.totalPages}
-                >
-                  Selanjutnya
-                </Button>
-              </div>
-            </div>
+          {pagination && (
+            <DataPagination
+              page={page}
+              totalPages={pagination.totalPages}
+              total={pagination.total}
+              limit={10}
+              onPageChange={(p) => setPage(p)}
+              itemLabel="member"
+            />
           )}
         </>
       )}

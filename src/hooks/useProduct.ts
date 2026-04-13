@@ -9,6 +9,7 @@ import { arrayFetcher, itemFetcher, ensureArray } from "@/lib/swr-fetcher";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { ProductForm as ProductFormData } from "@/lib/validations";
+import { extractApiError } from "@/lib/api";
 // ✅ Pagination interface
 interface Pagination {
   page: number;
@@ -146,7 +147,8 @@ export function useProductActions() {
       return product;
     } catch (error) {
       console.error("Update error:", error);
-      toast.error("Gagal mengupdate produk");
+      const msg = extractApiError(error, "Gagal mengupdate produk");
+      toast.error("Gagal mengupdate produk", { description: msg !== "Gagal mengupdate produk" ? msg : undefined });
       throw error;
     } finally {
       setIsLoading(false);
@@ -158,6 +160,10 @@ export function useProductActions() {
     try {
       await api.delete(`/products/${id}`);
       toast.success("Produk berhasil dihapus");
+    } catch (error) {
+      const msg = extractApiError(error, "Gagal menghapus produk");
+      toast.error(msg);
+      throw error;
     } finally {
       setIsLoading(false);
     }

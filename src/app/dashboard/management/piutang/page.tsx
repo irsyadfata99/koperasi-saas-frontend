@@ -33,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DataPagination } from "@/components/shared/data-pagination";
 
 export default function MemberDebtPage() {
   const user = useCurrentUser();
@@ -194,36 +195,19 @@ export default function MemberDebtPage() {
             debts={debts}
             onPay={handlePayClick}
             onView={(debt) => {
-              // TODO: Implement view detail
               console.log("View debt:", debt);
             }}
           />
 
-          {/* Pagination */}
-          {pagination && pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Menampilkan {debts.length} dari {pagination.total} data
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(page - 1)}
-                  disabled={page === 1}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(page + 1)}
-                  disabled={page === pagination.totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
+          {pagination && (
+            <DataPagination
+              page={page}
+              totalPages={pagination.totalPages}
+              total={pagination.total}
+              limit={10}
+              onPageChange={(p) => setPage(p)}
+              itemLabel="piutang"
+            />
           )}
         </>
       )}

@@ -6,7 +6,7 @@ import { useCurrentUser } from "@/hooks/useAuth";
 import { usePathname } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { UserCircle, LogOut, User, Home } from "lucide-react";
+import { UserCircle, LogOut, User, Home, Store } from "lucide-react";
 import Link from "next/link";
 
 export function UserMenu() {
@@ -47,6 +47,14 @@ export function UserMenu() {
             <Link href={profileLink} className="cursor-pointer">
               <User className="mr-2 h-4 w-4" />
               Profile
+            </Link>
+          </DropdownMenuItem>
+        )}
+        {!isSuperadminSection && user.role === "ADMIN" && (
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard/settings/general" className="cursor-pointer">
+              <Store className="mr-2 h-4 w-4" />
+              Pengaturan Toko
             </Link>
           </DropdownMenuItem>
         )}

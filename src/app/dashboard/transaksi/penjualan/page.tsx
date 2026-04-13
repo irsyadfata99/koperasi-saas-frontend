@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DataPagination } from "@/components/shared/data-pagination";
 
 export default function TransactionHistoryPage() {
   const [search, setSearch] = useState("");
@@ -92,31 +93,15 @@ export default function TransactionHistoryPage() {
         <>
           <TransactionTable transactions={transactions || []} />
 
-          {/* ✅ Pagination UI */}
-          {pagination && pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between py-4">
-              <p className="text-sm text-muted-foreground">
-                Menampilkan {transactions.length} dari {pagination.total} transaksi
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(page - 1)}
-                  disabled={page === 1}
-                >
-                  Sebelumnya
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(page + 1)}
-                  disabled={page === pagination.totalPages}
-                >
-                  Selanjutnya
-                </Button>
-              </div>
-            </div>
+          {pagination && (
+            <DataPagination
+              page={page}
+              totalPages={pagination.totalPages}
+              total={pagination.total}
+              limit={10}
+              onPageChange={(p) => setPage(p)}
+              itemLabel="transaksi"
+            />
           )}
         </>
       )}

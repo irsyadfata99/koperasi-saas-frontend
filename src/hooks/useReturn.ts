@@ -3,7 +3,7 @@
 import useSWR from "swr";
 import { useState } from "react";
 import { toast } from "sonner";
-import { apiClient } from "@/lib/api";
+import { apiClient, extractApiError } from "@/lib/api";
 import {
   PurchaseReturn,
   SalesReturn,
@@ -247,10 +247,8 @@ export function useReturnActions() {
       });
       return result;
     } catch (error: any) {
-      const errorMsg =
-        error.response?.data?.message || "Gagal membuat retur pembelian";
       toast.error("Retur pembelian gagal", {
-        description: errorMsg,
+        description: extractApiError(error, "Gagal membuat retur pembelian"),
       });
       throw error;
     } finally {
@@ -278,10 +276,8 @@ export function useReturnActions() {
       });
       return result;
     } catch (error: any) {
-      const errorMsg =
-        error.response?.data?.message || "Gagal membuat retur penjualan";
       toast.error("Retur penjualan gagal", {
-        description: errorMsg,
+        description: extractApiError(error, "Gagal membuat retur penjualan"),
       });
       throw error;
     } finally {
@@ -307,10 +303,8 @@ export function useReturnActions() {
       });
       return result;
     } catch (error: any) {
-      const errorMsg =
-        error.response?.data?.message || "Gagal menyetujui retur";
       toast.error("Approve gagal", {
-        description: errorMsg,
+        description: extractApiError(error, "Gagal menyetujui retur"),
       });
       throw error;
     } finally {
@@ -336,9 +330,8 @@ export function useReturnActions() {
       });
       return result;
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || "Gagal menolak retur";
       toast.error("Reject gagal", {
-        description: errorMsg,
+        description: extractApiError(error, "Gagal menolak retur"),
       });
       throw error;
     } finally {
@@ -364,10 +357,8 @@ export function useReturnActions() {
       });
       return result;
     } catch (error: any) {
-      const errorMsg =
-        error.response?.data?.message || "Gagal menyetujui retur";
       toast.error("Approve gagal", {
-        description: errorMsg,
+        description: extractApiError(error, "Gagal menyetujui retur"),
       });
       throw error;
     } finally {
@@ -390,9 +381,8 @@ export function useReturnActions() {
       });
       return result;
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || "Gagal menolak retur";
       toast.error("Reject gagal", {
-        description: errorMsg,
+        description: extractApiError(error, "Gagal menolak retur"),
       });
       throw error;
     } finally {

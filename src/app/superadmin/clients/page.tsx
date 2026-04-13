@@ -2,6 +2,7 @@
 
 import { useClients } from "@/hooks/useClient";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -10,31 +11,52 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Store, Loader2 } from "lucide-react";
+import { Plus, Store, Loader2, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { CreateClientDialog } from "@/components/superadmin/create-client-dialog";
 import { EditClientDialog } from "@/components/superadmin/edit-client-dialog";
 import { Client } from "@/hooks/useClient";
+import { DataPagination } from "@/components/shared/data-pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const LIMIT = 10;
 
 export default function ClientsPage() {
-  const { clients, isLoading, isError, mutate } = useClients();
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+
+  const { clients, pagination, isLoading, isError, mutate } = useClients({
+    page,
+    limit: LIMIT,
+    search: search || undefined,
+    status: statusFilter || undefined,
+  });
 
   const handleEdit = (client: Client) => {
     setSelectedClient(client);
     setIsEditOpen(true);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setPage(1);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value === "ALL" ? "" : value);
+    setPage(1);
+  };
 
   if (isError) {
     return (
@@ -59,6 +81,30 @@ export default function ClientsPage() {
         </Button>
       </div>
 
+      {/* Filters */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Cari nama toko atau kode..."
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select value={statusFilter || "ALL"} onValueChange={handleStatusChange}>
+          <SelectTrigger className="w-full sm:w-[160px]">
+            <SelectValue placeholder="Semua Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">Semua Status</SelectItem>
+            <SelectItem value="ACTIVE">Active</SelectItem>
+            <SelectItem value="INACTIVE">Inactive</SelectItem>
+            <SelectItem value="SUSPENDED">Suspended</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -73,12 +119,18 @@ export default function ClientsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {clients.length === 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={7} className="h-32 text-center">
+                  <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
+                </TableCell>
+              </TableRow>
+            ) : clients.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="h-24 text-center">
                   <div className="flex flex-col items-center justify-center text-muted-foreground">
                     <Store className="mb-2 h-8 w-8" />
-                    No clients found
+                    {search ? `Tidak ada client dengan kata kunci "${search}"` : "No clients found"}
                   </div>
                 </TableCell>
               </TableRow>
@@ -86,9 +138,7 @@ export default function ClientsPage() {
               clients.map((client) => (
                 <TableRow key={client.id}>
                   <TableCell className="font-mono text-xs">{client.code}</TableCell>
-                  <TableCell className="font-medium">
-                    {client.businessName}
-                  </TableCell>
+                  <TableCell className="font-medium">{client.businessName}</TableCell>
                   <TableCell>{client.ownerName || "-"}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{client.subscriptionPlan}</Badge>
@@ -96,7 +146,11 @@ export default function ClientsPage() {
                   <TableCell>
                     <Badge
                       variant={
-                        client.status === "ACTIVE" ? "default" : "secondary"
+                        client.status === "ACTIVE"
+                          ? "default"
+                          : client.status === "SUSPENDED"
+                          ? "destructive"
+                          : "secondary"
                       }
                     >
                       {client.status}
@@ -104,9 +158,11 @@ export default function ClientsPage() {
                   </TableCell>
                   <TableCell>
                     {client.subscriptionEnd
-                      ? new Date(client.subscriptionEnd).toLocaleDateString(
-                        "id-ID", { day: 'numeric', month: 'short', year: 'numeric' }
-                      )
+                      ? new Date(client.subscriptionEnd).toLocaleDateString("id-ID", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })
                       : "-"}
                   </TableCell>
                   <TableCell className="text-right">
@@ -120,6 +176,18 @@ export default function ClientsPage() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Pagination */}
+      {pagination && (
+        <DataPagination
+          page={page}
+          totalPages={pagination.totalPages}
+          total={pagination.total}
+          limit={LIMIT}
+          onPageChange={setPage}
+          itemLabel="client"
+        />
+      )}
 
       <CreateClientDialog
         open={isCreateOpen}

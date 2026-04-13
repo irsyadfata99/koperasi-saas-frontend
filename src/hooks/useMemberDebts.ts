@@ -4,6 +4,7 @@
 import useSWR from "swr";
 import { useState } from "react";
 import { toast } from "sonner";
+import { extractApiError } from "@/lib/api";
 import {
   getMemberDebts,
   getMemberDebtDetail,
@@ -130,11 +131,8 @@ export function useMemberDebtActions() {
       });
       return result;
     } catch (error) {
-      const errorMsg =
-        error instanceof Error ? error.message : "Gagal memproses pembayaran";
-      toast.error("Pembayaran gagal", {
-        description: errorMsg,
-      });
+      const msg = extractApiError(error, "Gagal memproses pembayaran");
+      toast.error("Pembayaran gagal", { description: msg });
       throw error;
     } finally {
       setIsLoading(false);
@@ -166,11 +164,8 @@ export function useMemberDebtActions() {
         description: "File Excel berhasil diunduh",
       });
     } catch (error) {
-      const errorMsg =
-        error instanceof Error ? error.message : "Gagal export data";
-      toast.error("Export gagal", {
-        description: errorMsg,
-      });
+      const msg = extractApiError(error, "Gagal export data");
+      toast.error("Export gagal", { description: msg });
       throw error;
     } finally {
       setIsLoading(false);

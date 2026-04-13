@@ -12,6 +12,7 @@ import { Search, Download, Gift, TrendingUp, Settings } from "lucide-react";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { useCurrentUser } from "@/hooks/useAuth";
 import { PointTransactionFilters } from "@/types/point";
+import { DataPagination } from "@/components/shared/data-pagination";
 
 export default function PointsPage() {
   const user = useCurrentUser();
@@ -161,21 +162,15 @@ export default function PointsPage() {
         <>
           <PointTransactionTable transactions={transactions} />
 
-          {/* Pagination */}
-          {pagination && pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Menampilkan {transactions.length} dari {pagination.total} data
-              </p>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => setPage(page - 1)} disabled={page === 1}>
-                  Previous
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setPage(page + 1)} disabled={page === pagination.totalPages}>
-                  Next
-                </Button>
-              </div>
-            </div>
+          {pagination && (
+            <DataPagination
+              page={page}
+              totalPages={pagination.totalPages}
+              total={pagination.total}
+              limit={20}
+              onPageChange={(p) => setPage(p)}
+              itemLabel="transaksi point"
+            />
           )}
         </>
       )}

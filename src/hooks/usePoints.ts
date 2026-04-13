@@ -4,6 +4,7 @@
 import useSWR from "swr";
 import { useState } from "react";
 import { toast } from "sonner";
+import { extractApiError } from "@/lib/api";
 import {
   getPointSettings,
   updatePointSettings,
@@ -144,10 +145,8 @@ export function usePointActions() {
       toast.success("Pengaturan point berhasil diupdate");
       return settings;
     } catch (error) {
-      const errorMsg =
-        error instanceof Error ? error.message : "Gagal update pengaturan";
       toast.error("Update gagal", {
-        description: errorMsg,
+        description: extractApiError(error, "Gagal update pengaturan"),
       });
       throw error;
     } finally {
@@ -172,10 +171,8 @@ export function usePointActions() {
       });
       return result;
     } catch (error) {
-      const errorMsg =
-        error instanceof Error ? error.message : "Gagal tukar point";
       toast.error("Penukaran gagal", {
-        description: errorMsg,
+        description: extractApiError(error, "Gagal tukar point"),
       });
       throw error;
     } finally {
@@ -200,10 +197,8 @@ export function usePointActions() {
       });
       return transaction;
     } catch (error) {
-      const errorMsg =
-        error instanceof Error ? error.message : "Gagal melakukan penyesuaian";
       toast.error("Penyesuaian gagal", {
-        description: errorMsg,
+        description: extractApiError(error, "Gagal melakukan penyesuaian"),
       });
       throw error;
     } finally {
@@ -226,10 +221,8 @@ export function usePointActions() {
       });
       return result;
     } catch (error) {
-      const errorMsg =
-        error instanceof Error ? error.message : "Gagal expire point";
       toast.error("Proses gagal", {
-        description: errorMsg,
+        description: extractApiError(error, "Gagal expire point"),
       });
       throw error;
     } finally {
@@ -246,10 +239,8 @@ export function usePointActions() {
       const result = await previewPointCalculation(items);
       return result;
     } catch (error) {
-      const errorMsg =
-        error instanceof Error ? error.message : "Gagal menghitung point";
       toast.error("Kalkulasi gagal", {
-        description: errorMsg,
+        description: extractApiError(error, "Gagal menghitung point"),
       });
       throw error;
     } finally {
@@ -266,10 +257,8 @@ export function usePointActions() {
       const result = await validatePointRedemption(data);
       return result;
     } catch (error) {
-      const errorMsg =
-        error instanceof Error ? error.message : "Gagal validasi point";
       toast.error("Validasi gagal", {
-        description: errorMsg,
+        description: extractApiError(error, "Gagal validasi point"),
       });
       throw error;
     } finally {
@@ -302,10 +291,8 @@ export function usePointActions() {
         description: "File Excel berhasil diunduh",
       });
     } catch (error) {
-      const errorMsg =
-        error instanceof Error ? error.message : "Gagal export data";
       toast.error("Export gagal", {
-        description: errorMsg,
+        description: extractApiError(error, "Gagal export data"),
       });
       throw error;
     } finally {

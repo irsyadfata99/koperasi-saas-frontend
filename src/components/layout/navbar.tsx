@@ -9,22 +9,14 @@ export function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="/login" className="flex items-center space-x-2">
             <div className="text-xl font-bold text-primary">Koperasi POS</div>
           </Link>
 
-          {/* Navigation Links */}
-          <div className="flex items-center space-x-4">
-            <Link href="/">
-              <Button variant="ghost">Homepage</Button>
-            </Link>
-            <Link href="/">
-              <Button variant="ghost">Homepage</Button>
-            </Link>
-            <Link href="/login">
-              <Button>Login</Button>
-            </Link>
-          </div>
+          {/* Navigation */}
+          <Link href="/login">
+            <Button>Login</Button>
+          </Link>
         </div>
       </div>
     </nav>

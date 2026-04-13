@@ -3,7 +3,7 @@
 import useSWR from "swr";
 import { useState } from "react";
 import { toast } from "sonner";
-import { apiClient } from "@/lib/api";
+import { apiClient, extractApiError } from "@/lib/api";
 import { arrayFetcher } from "@/lib/swr-fetcher";
 
 export interface Client {
@@ -43,15 +43,48 @@ export interface CreateClientPayload {
     };
 }
 
-export function useClients() {
-    const { data, error, isLoading, mutate } = useSWR<Client[]>(
-        "/clients", // Adjust endpoint if needed, e.g. /admin/clients
-        arrayFetcher,
+export interface ClientsResponse {
+    data: Client[];
+    pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+    };
+}
+
+const clientsFetcher = async (url: string): Promise<ClientsResponse> => {
+    const response = await apiClient.get<any>(url);
+    if (response && typeof response === "object" && !Array.isArray(response)) {
+        if (response.data && Array.isArray(response.data)) {
+            return {
+                data: response.data,
+                pagination: response.pagination || { page: 1, limit: 10, total: response.data.length, totalPages: 1 },
+            };
+        }
+    }
+    const arr = Array.isArray(response) ? response : [];
+    return { data: arr, pagination: { page: 1, limit: 10, total: arr.length, totalPages: 1 } };
+};
+
+export function useClients(params?: { page?: number; limit?: number; search?: string; status?: string }) {
+    const queryString = new URLSearchParams(
+        Object.entries(params || {}).reduce((acc, [key, value]) => {
+            if (value !== undefined && value !== null && value !== "") acc[key] = String(value);
+            return acc;
+        }, {} as Record<string, string>)
+    ).toString();
+
+    const url = `/clients${queryString ? `?${queryString}` : ""}`;
+    const { data, error, isLoading, mutate } = useSWR<ClientsResponse>(
+        url,
+        clientsFetcher,
         { revalidateOnFocus: false }
     );
 
     return {
-        clients: data || [],
+        clients: data?.data || [],
+        pagination: data?.pagination,
         isLoading,
         isError: error,
         mutate,
@@ -68,18 +101,9 @@ export function useClientActions() {
             toast.success("Client berhasil dibuat");
             return client;
         } catch (error: any) {
-            console.error("Failed to create client:", error);
-
-            // Extract error message
-            let message = error.response?.data?.message || error.message || "Gagal membuat client";
-
-            // Clean up Sequelize validation errors if present
-            if (typeof message === 'string' && message.includes("Validation error:")) {
-                message = message.split("Validation error:").join("").trim();
-            }
-
+            const msg = extractApiError(error, "Gagal membuat client");
             toast.error("Gagal membuat client", {
-                description: message,
+                description: msg,
                 duration: 5000,
             });
             throw error;
@@ -94,6 +118,10 @@ export function useClientActions() {
             const client = await apiClient.put<Client>(`/clients/${id}`, data);
             toast.success("Client berhasil diupdate");
             return client;
+        } catch (error) {
+            const msg = extractApiError(error, "Gagal mengupdate client");
+            toast.error("Gagal mengupdate client", { description: msg });
+            throw error;
         } finally {
             setIsLoading(false);
         }
@@ -105,7 +133,8 @@ export function useClientActions() {
             await apiClient.delete(`/clients/${id}`);
             toast.success("Client berhasil dihapus");
         } catch (error: any) {
-            toast.error(error.response?.data?.message || "Gagal menghapus client");
+            const msg = extractApiError(error, "Gagal menghapus client");
+            toast.error("Gagal menghapus client", { description: msg });
             throw error;
         } finally {
             setIsLoading(false);

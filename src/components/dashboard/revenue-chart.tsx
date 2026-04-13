@@ -26,7 +26,7 @@ export function RevenueChart() {
       const response = await apiClient.get<any>("/reports/daily-transactions", {
         params: {
           startDate: startDate.toISOString().split("T")[0],
-          endDate: endDate.toISOString().split("T")[0],
+          endDate: endDate.toISOString().split("T")[0] + "T23:59:59",
         },
       });
 
