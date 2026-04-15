@@ -15,18 +15,21 @@ import {
 
 export function useStockMovements(params?: any) {
   const queryString = new URLSearchParams(
-    Object.entries(params || {}).reduce((acc, [key, value]) => {
-      if (value !== undefined && value !== null && value !== "") {
-        acc[key] = String(value);
-      }
-      return acc;
-    }, {} as Record<string, string>)
+    Object.entries(params || {}).reduce(
+      (acc, [key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          acc[key] = String(value);
+        }
+        return acc;
+      },
+      {} as Record<string, string>,
+    ),
   ).toString();
 
-  const { data, error, isLoading, mutate } = useSWR(
+  const { data, error, isLoading, mutate } = useSWR<StockMovementRecord[]>(
     `/stock/movements?${queryString}`,
-    arrayFetcher,
-    { revalidateOnFocus: false }
+    (url) => arrayFetcher<StockMovementRecord>(url),
+    { revalidateOnFocus: false },
   );
 
   return {
@@ -39,18 +42,21 @@ export function useStockMovements(params?: any) {
 
 export function useStockAdjustments(params?: any) {
   const queryString = new URLSearchParams(
-    Object.entries(params || {}).reduce((acc, [key, value]) => {
-      if (value !== undefined && value !== null && value !== "") {
-        acc[key] = String(value);
-      }
-      return acc;
-    }, {} as Record<string, string>)
+    Object.entries(params || {}).reduce(
+      (acc, [key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          acc[key] = String(value);
+        }
+        return acc;
+      },
+      {} as Record<string, string>,
+    ),
   ).toString();
 
-  const { data, error, isLoading, mutate } = useSWR(
+  const { data, error, isLoading, mutate } = useSWR<StockAdjustmentRecord[]>(
     `/stock/adjustments?${queryString}`,
-    arrayFetcher,
-    { revalidateOnFocus: false }
+    (url) => arrayFetcher<StockAdjustmentRecord>(url),
+    { revalidateOnFocus: false },
   );
 
   return {
@@ -65,7 +71,7 @@ export function useStockAdjustment(id: string | null) {
   const { data, error, isLoading, mutate } = useSWR(
     id ? `/stock/adjustments/${id}` : null,
     itemFetcher,
-    { revalidateOnFocus: false }
+    { revalidateOnFocus: false },
   );
 
   return {
@@ -91,7 +97,7 @@ export function useStockAdjustmentActions() {
       };
       const adjustment = await apiClient.post<StockAdjustmentRecord>(
         "/stock/adjustments",
-        payload
+        payload,
       );
       toast.success("Adjustment berhasil dibuat");
       return adjustment;
@@ -104,7 +110,7 @@ export function useStockAdjustmentActions() {
     setIsLoading(true);
     try {
       const adjustment = await apiClient.patch<StockAdjustmentRecord>(
-        `/stock/adjustments/${id}/approve`
+        `/stock/adjustments/${id}/approve`,
       );
       toast.success("Adjustment berhasil disetujui");
       return adjustment;
@@ -118,7 +124,7 @@ export function useStockAdjustmentActions() {
     try {
       const adjustment = await apiClient.patch<StockAdjustmentRecord>(
         `/stock/adjustments/${id}/reject`,
-        { reason }
+        { reason },
       );
       toast.success("Adjustment ditolak");
       return adjustment;

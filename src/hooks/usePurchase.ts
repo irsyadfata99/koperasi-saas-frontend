@@ -11,18 +11,21 @@ import { Purchase, PurchaseStats, CreatePurchaseRequest } from "@/types";
 
 export function usePurchases(params?: any) {
   const queryString = new URLSearchParams(
-    Object.entries(params || {}).reduce((acc, [key, value]) => {
-      if (value !== undefined && value !== null && value !== "") {
-        acc[key] = String(value);
-      }
-      return acc;
-    }, {} as Record<string, string>)
+    Object.entries(params || {}).reduce(
+      (acc, [key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          acc[key] = String(value);
+        }
+        return acc;
+      },
+      {} as Record<string, string>,
+    ),
   ).toString();
 
-  const { data, error, isLoading, mutate } = useSWR(
+  const { data, error, isLoading, mutate } = useSWR<Purchase[]>(
     `/purchases?${queryString}`,
-    arrayFetcher,
-    { revalidateOnFocus: false, dedupingInterval: 5000 }
+    (url) => arrayFetcher<Purchase>(url),
+    { revalidateOnFocus: false, dedupingInterval: 5000 },
   );
 
   return {
@@ -34,10 +37,10 @@ export function usePurchases(params?: any) {
 }
 
 export function usePurchase(id: string | null) {
-  const { data, error, isLoading, mutate } = useSWR(
+  const { data, error, isLoading, mutate } = useSWR<Purchase | null>(
     id ? `/purchases/${id}` : null,
-    itemFetcher,
-    { revalidateOnFocus: false }
+    (url) => itemFetcher<Purchase>(url),
+    { revalidateOnFocus: false },
   );
 
   return {
@@ -101,7 +104,7 @@ export function usePurchaseActions() {
 
   const updatePayment = async (
     purchaseId: string,
-    data: { amount: number; notes?: string }
+    data: { amount: number; notes?: string },
   ) => {
     setIsLoading(true);
     try {
@@ -111,7 +114,7 @@ export function usePurchaseActions() {
       };
       const purchase = await apiClient.patch<Purchase>(
         `/purchases/${purchaseId}/pay`,
-        payload
+        payload,
       );
       toast.success("Pembayaran berhasil diupdate");
       return purchase;

@@ -258,7 +258,9 @@ export interface TransactionItem {
   productId: string;
   productName: string;
   quantity: number;
+  unit: string;
   price: number;
+  sellingPrice: number;
   subtotal: number;
 }
 
@@ -284,6 +286,7 @@ export interface Transaction {
     id: string;
     uniqueId: string;
     fullName: string;
+    whatsapp?: string;
   };
   user?: {
     // ✅ Dari include

@@ -14,18 +14,21 @@ export function useCategories(params?: {
   isActive?: boolean;
 }) {
   const queryString = new URLSearchParams(
-    Object.entries(params || {}).reduce((acc, [key, value]) => {
-      if (value !== undefined && value !== null) {
-        acc[key] = String(value);
-      }
-      return acc;
-    }, {} as Record<string, string>)
+    Object.entries(params || {}).reduce(
+      (acc, [key, value]) => {
+        if (value !== undefined && value !== null) {
+          acc[key] = String(value);
+        }
+        return acc;
+      },
+      {} as Record<string, string>,
+    ),
   ).toString();
 
-  const { data, error, isLoading, mutate } = useSWR(
+  const { data, error, isLoading, mutate } = useSWR<Category[]>(
     `/categories?${queryString}`,
-    arrayFetcher,
-    { revalidateOnFocus: false }
+    (url) => arrayFetcher<Category>(url),
+    { revalidateOnFocus: false },
   );
 
   return {
@@ -37,10 +40,10 @@ export function useCategories(params?: {
 }
 
 export function useCategory(id: string) {
-  const { data, error, isLoading, mutate } = useSWR(
+  const { data, error, isLoading, mutate } = useSWR<Category | null>(
     id ? `/categories/${id}` : null,
-    itemFetcher,
-    { revalidateOnFocus: false }
+    (url) => itemFetcher<Category>(url),
+    { revalidateOnFocus: false },
   );
 
   return {
@@ -72,7 +75,7 @@ export function useCategoryActions() {
       return category;
     } catch (error: any) {
       toast.error(
-        error.response?.data?.message || "Gagal menambahkan kategori"
+        error.response?.data?.message || "Gagal menambahkan kategori",
       );
       throw error;
     } finally {
@@ -82,7 +85,7 @@ export function useCategoryActions() {
 
   const updateCategory = async (
     id: string,
-    data: { name: string; description?: string }
+    data: { name: string; description?: string },
   ) => {
     setIsLoading(true);
     try {

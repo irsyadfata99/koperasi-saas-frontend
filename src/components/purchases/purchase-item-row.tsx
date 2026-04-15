@@ -29,17 +29,16 @@ export function PurchaseItemRow({
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(initialData?.quantity ?? 1);
   const [purchasePrice, setPurchasePrice] = useState(
-    initialData?.purchasePrice ?? 0
+    initialData?.purchasePrice ?? 0,
   );
   const [sellingPrice, setSellingPrice] = useState(
-    initialData?.sellingPrice ?? 0
+    initialData?.sellingPrice ?? 0,
   );
   const [expDate, setExpDate] = useState(initialData?.expDate ?? "");
 
-  // ✅ FIX: Use arrayFetcher
-  const { data: productsData } = useSWR(
+  const { data: productsData } = useSWR<Product[]>(
     search.length >= 2 ? `/products/autocomplete?query=${search}` : null,
-    arrayFetcher
+    (url: string) => arrayFetcher<Product>(url),
   );
 
   const products = ensureArray(productsData);
