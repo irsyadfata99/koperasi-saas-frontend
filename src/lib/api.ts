@@ -1,7 +1,12 @@
 // src/lib/api.ts
 // Enhanced API client with automatic retry, request queuing, and rate limit handling
 
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import axios, {
+  AxiosError,
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+} from "axios";
 import { ApiError } from "@/types";
 
 // ============================================
@@ -30,7 +35,10 @@ const getRequestKey = (config: AxiosRequestConfig): string => {
   return `${method.toUpperCase()}:${url}:${JSON.stringify(params)}:${JSON.stringify(data)}`;
 };
 
-const deduplicateRequest = async <T>(config: AxiosRequestConfig, executor: () => Promise<T>): Promise<T> => {
+const deduplicateRequest = async <T>(
+  config: AxiosRequestConfig,
+  executor: () => Promise<T>,
+): Promise<T> => {
   const key = getRequestKey(config);
 
   // If same request is pending, return the existing promise
@@ -74,7 +82,11 @@ const defaultRetryConfig: RetryConfig = {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const calculateRetryDelay = (attemptNumber: number, config: RetryConfig, retryAfter?: number): number => {
+const calculateRetryDelay = (
+  attemptNumber: number,
+  config: RetryConfig,
+  retryAfter?: number,
+): number => {
   // If server provides retry-after, use it (in seconds)
   if (retryAfter && retryAfter > 0) {
     return Math.min(retryAfter * 1000, config.maxDelay);
@@ -89,7 +101,11 @@ const calculateRetryDelay = (attemptNumber: number, config: RetryConfig, retryAf
   return Math.min(exponentialDelay + jitter, config.maxDelay);
 };
 
-const retryRequest = async <T>(request: () => Promise<T>, config: RetryConfig = defaultRetryConfig, attemptNumber: number = 0): Promise<T> => {
+const retryRequest = async <T>(
+  request: () => Promise<T>,
+  config: RetryConfig = defaultRetryConfig,
+  attemptNumber: number = 0,
+): Promise<T> => {
   try {
     return await request();
   } catch (error) {
@@ -104,7 +120,9 @@ const retryRequest = async <T>(request: () => Promise<T>, config: RetryConfig = 
     }
 
     // Get retry-after from response headers (in seconds)
-    const retryAfter = axiosError.response?.headers?.["retry-after"] ? parseInt(axiosError.response.headers["retry-after"]) : axiosError.response?.data?.retryAfter;
+    const retryAfter = axiosError.response?.headers?.["retry-after"]
+      ? parseInt(axiosError.response.headers["retry-after"])
+      : axiosError.response?.data?.retryAfter;
 
     const delay = calculateRetryDelay(attemptNumber, config, retryAfter);
 
@@ -113,7 +131,10 @@ const retryRequest = async <T>(request: () => Promise<T>, config: RetryConfig = 
       showRateLimitToast(Math.ceil(delay / 1000));
     }
 
-    console.warn(`Request failed (attempt ${attemptNumber + 1}/${config.maxRetries + 1}). ` + `Retrying in ${Math.ceil(delay / 1000)}s...`);
+    console.warn(
+      `Request failed (attempt ${attemptNumber + 1}/${config.maxRetries + 1}). ` +
+        `Retrying in ${Math.ceil(delay / 1000)}s...`,
+    );
 
     await sleep(delay);
     return retryRequest(request, config, attemptNumber + 1);
@@ -123,6 +144,7 @@ const retryRequest = async <T>(request: () => Promise<T>, config: RetryConfig = 
 // ============================================
 // AXIOS INSTANCE
 // ============================================
+// force update ENV
 const api: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api",
   timeout: 30000,
@@ -144,7 +166,7 @@ api.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // ============================================
@@ -201,7 +223,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 // ============================================
@@ -245,14 +267,16 @@ export const handleApiError = (error: unknown): string => {
 
     // Priority 1: Field-level validation errors (e.g. from SequelizeValidationError)
     if (data?.errors && Object.keys(data.errors).length > 0) {
-      const messages = Object.entries(data.errors)
-        .flatMap(([field, msgs]) =>
-          msgs.map((msg) => {
-            // Capitalize field name for readability: "password" -> "Password"
-            const label = field === "general" ? "" : `${field.charAt(0).toUpperCase() + field.slice(1)}: `;
-            return `${label}${msg}`;
-          })
-        );
+      const messages = Object.entries(data.errors).flatMap(([field, msgs]) =>
+        msgs.map((msg) => {
+          // Capitalize field name for readability: "password" -> "Password"
+          const label =
+            field === "general"
+              ? ""
+              : `${field.charAt(0).toUpperCase() + field.slice(1)}: `;
+          return `${label}${msg}`;
+        }),
+      );
       return messages.join("\n");
     }
 
@@ -279,11 +303,13 @@ export const handleApiError = (error: unknown): string => {
  * Shorthand alias for use in hooks — same as handleApiError.
  * Returns the backend error message or a provided fallback.
  */
-export const extractApiError = (error: unknown, fallback = "Operasi gagal"): string => {
+export const extractApiError = (
+  error: unknown,
+  fallback = "Operasi gagal",
+): string => {
   const msg = handleApiError(error);
   return msg || fallback;
 };
-
 
 // ============================================
 // ENHANCED API METHODS WITH RETRY & DEDUPLICATION
@@ -301,7 +327,7 @@ export const apiClient = {
           return response.data as T;
         }
         return response as T;
-      })
+      }),
     );
   },
 
@@ -309,7 +335,7 @@ export const apiClient = {
     url: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data?: any,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<T> => {
     // Don't deduplicate POST requests (they may have side effects)
     return retryRequest(
@@ -331,7 +357,7 @@ export const apiClient = {
           // Only retry POST on rate limit, not on other errors
           return error.response?.status === 429;
         },
-      }
+      },
     );
   },
 
@@ -339,7 +365,7 @@ export const apiClient = {
     url: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data?: any,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<T> => {
     return retryRequest(
       async () => {
@@ -357,7 +383,7 @@ export const apiClient = {
         ...defaultRetryConfig,
         maxRetries: 2,
         shouldRetry: (error) => error.response?.status === 429,
-      }
+      },
     );
   },
 
@@ -365,7 +391,7 @@ export const apiClient = {
     url: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data?: any,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<T> => {
     return retryRequest(
       async () => {
@@ -383,7 +409,7 @@ export const apiClient = {
         ...defaultRetryConfig,
         maxRetries: 2,
         shouldRetry: (error) => error.response?.status === 429,
-      }
+      },
     );
   },
 
@@ -404,7 +430,7 @@ export const apiClient = {
         ...defaultRetryConfig,
         maxRetries: 1, // Minimal retries for delete
         shouldRetry: (error) => error.response?.status === 429,
-      }
+      },
     );
   },
 };
